@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>English Master v4 🇺🇸 Benicio — 120 Aulas</title><style>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>English Master v4 🇺🇸 Benício — 120 Aulas</title><style>
 :root{--bg:#0f0f1a;--bg2:#13132a;--card:#1e2746;--card2:#252d52;--border:#2e3a6e;--text:#e8eaf6;--text2:#9fa8da;--accent:#4fc3f7;--green:#00e676;--orange:#ff9800;--pron:#ffab40;--red:#ef5350;--purple:#ce93d8;--shadow:0 4px 20px rgba(0,0,0,.4);}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-serif;min-height:100vh;overflow-x:hidden;}
@@ -351,9 +351,20 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
 /* ── Sidebar buttons ── */
 .sidebar-action-btn{width:100%;margin:4px 0;padding:8px 12px;background:#1a2240;border:1.5px solid rgba(79,195,247,.3);border-radius:8px;color:var(--accent);cursor:pointer;font-size:.85rem;font-weight:700;text-align:left;transition:border-color .2s;}
 .sidebar-action-btn:hover{border-color:var(--accent);}
+/* ── Mobile sidebar fixes ── */
+@media(max-width:700px){
+  #menu-btn{display:flex;align-items:center;justify-content:center;min-width:40px;min-height:40px;font-size:1.4rem;padding:8px;}
+  #topbar{position:sticky;top:0;z-index:450;touch-action:manipulation;}
+  .sm2-flashcard{padding:1.5rem 1rem;}
+  .sm2-word{font-size:1.8rem;}
+  .sm2-rating-row{gap:.5rem;}
+  .sm2-rate-btn{padding:8px 12px;font-size:.8rem;}
+  .dash-grid{grid-template-columns:repeat(2,1fr);}
+  .xp-chart{height:60px;}
+}
 </style></head><body>
 <div id="splash">
-  <h1>&#127482;&#127480; English Master - Benicio</h1>
+  <h1>&#127482;&#127480; English Master - Benício</h1>
   <p>Carregando 120 aulas completas...</p>
   <div class="splash-bar"><div class="splash-fill"></div></div>
 </div>
@@ -361,7 +372,7 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
 <div id="app">
   <nav id="sidebar">
     <div id="sidebar-header">
-      <h2>&#127482;&#127480; English Master - Benicio</h2>
+      <h2>&#127482;&#127480; English Master v2</h2>
       <div class="stats-row">
         <div class="stat-pill">&#9889; <span id="xp-display">0</span> XP</div>
         <div class="stat-pill">&#128293; <span id="streak-display">0</span> dias</div>
@@ -388,7 +399,13 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
     <div id="stats-panel">
       <div id="stats-content" style="overflow-y:auto; flex:1; padding:.5rem 0;"></div>
     </div>
+
+<div style="padding:6px 8px 10px;display:flex;flex-direction:column;gap:4px;">
+  <button id="sm2-sidebar-btn" class="sidebar-action-btn" onclick="openSm2Panel()">🧠 Revisão Global</button>
+  <button class="sidebar-action-btn" onclick="openDashboard()">📊 Dashboard</button>
+</div>
   </nav>
+<div id="sidebar-overlay" onclick="closeSidebarMobile()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:499;"></div>
   <div id="main">
     <div id="topbar">
       <button id="menu-btn" onclick="toggleSidebar()">&#9776;</button>
@@ -404,11 +421,6 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
         <option value="1.0">1.0x</option>
       </select>
     </div>
-<div style="display:flex;flex-direction:column;gap:0;padding:6px 8px 0;">
-<button id="sm2-sidebar-btn" class="sidebar-action-btn" onclick="openSm2Panel()">🧠 Revisão Global</button>
-<button class="sidebar-action-btn" onclick="openDashboard()">📊 Dashboard</button>
-</div>
-
     <div id="main-content" style="flex:1;display:flex;flex-direction:column;">
       <div id="no-lesson">
         <div style="font-size:5rem;margin-bottom:1rem;">&#127891;</div>
@@ -614,6 +626,38 @@ function pauseResumeAudio(){
   else if(window.speechSynthesis.speaking){window.speechSynthesis.pause();_ttsPaused=true;if(pb)pb.textContent='▶';setAvatarSpeaking(false);}
 }
 function stopAudio(){window.speechSynthesis.cancel();_ttsPaused=false;ttsBarHide();setAvatarSpeaking(false);}
+
+// ── MOBILE SIDEBAR ────────────────────────────────────────────────────────────
+function closeSidebarMobile(){
+  const sb=document.getElementById('sidebar');
+  const ov=document.getElementById('sidebar-overlay');
+  if(sb)sb.classList.remove('mobile-open');
+  if(ov)ov.style.display='none';
+  document.body.style.overflow='';
+}
+function _patchToggleSidebar(){
+  // Override toggleSidebar to handle overlay
+  window.toggleSidebar=function(){
+    const sb=document.getElementById('sidebar');
+    const ov=document.getElementById('sidebar-overlay');
+    if(!sb)return;
+    if(window.innerWidth<=700){
+      const isOpen=sb.classList.contains('mobile-open');
+      if(isOpen){
+        sb.classList.remove('mobile-open');
+        if(ov)ov.style.display='none';
+        document.body.style.overflow='';
+      } else {
+        sb.classList.add('mobile-open');
+        if(ov)ov.style.display='block';
+        document.body.style.overflow='hidden';
+      }
+    } else {
+      sb.classList.toggle('collapsed');
+    }
+  };
+}
+// Patch on DOMContentLoaded (called from init block below)
 
 // ═══════════════════════════════════════════════════════════════════
 //  AVATAR
@@ -1221,5 +1265,5 @@ function openTab(name,id){
 
 function loadFlashcardTest(words){const overlay=document.createElement('div');overlay.style.cssText='position:fixed;inset:0;background:var(--bg);z-index:9000;overflow-y:auto;padding:2rem;';overlay.innerHTML=`<div style="max-width:600px;margin:0 auto;"><div style="display:flex;justify-content:space-between;margin-bottom:1rem;"><h2 style="color:var(--accent);">📝 Teste de Vocabulário</h2><button class="btn btn-ghost" onclick="this.closest('[style]').remove()">✕ Fechar</button></div><div id="nb-test-view"></div></div>`;document.body.appendChild(overlay);let idx=0;const shuffle=[...words].sort(()=>Math.random()-.5);function showNb(){if(idx>=shuffle.length){document.getElementById('nb-test-view').innerHTML=`<div style="text-align:center;padding:2rem;"><div style="font-size:3rem;">🎉</div><h3 style="color:var(--green);">Teste concluído!</h3></div>`;return;}const w=shuffle[idx];document.getElementById('nb-test-view').innerHTML=`<div class="fc-container"><div class="fc-card" id="nb-fc" onclick="this.classList.add('flipped')"><div class="fc-front"><div class="fc-word">${w.word}</div><button class="btn-sm" onclick="event.stopPropagation();speak('${w.word.replace(/'/g,"\\'")}')">🔊</button><div class="fc-hint">Clique para ver</div></div><div class="fc-back"><div class="fc-pron">🇧🇷 ${w.pron}</div><div class="fc-pt">${w.pt}</div></div></div></div><div style="display:flex;gap:.8rem;justify-content:center;margin-top:1rem;"><button class="fc-btn fc-again" onclick="idx++;showNb()">Próxima</button></div>`;};showNb();}
 
-window.addEventListener('DOMContentLoaded',()=>{loadState();buildSidebar();updateUI();setTimeout(dashRefreshBadge,600);const m=Math.floor(state.timerSec/60).toString().padStart(2,'0'),s=(state.timerSec%60).toString().padStart(2,'0');document.getElementById('timer-display').textContent=m+':'+s;setTimeout(()=>{const sp=document.getElementById('splash');sp.style.opacity='0';setTimeout(()=>sp.style.display='none',800);},2300);const firstHdr=document.querySelector('.mod-header');if(firstHdr){firstHdr.classList.add('open');firstHdr.nextElementSibling.classList.add('open');}document.getElementById('main').addEventListener('click',()=>{if(window.innerWidth<=700)document.getElementById('sidebar').classList.remove('mobile-open');});});
+window.addEventListener('DOMContentLoaded',()=>{loadState();buildSidebar();updateUI();setTimeout(()=>{dashRefreshBadge();_patchToggleSidebar();},600);const m=Math.floor(state.timerSec/60).toString().padStart(2,'0'),s=(state.timerSec%60).toString().padStart(2,'0');document.getElementById('timer-display').textContent=m+':'+s;setTimeout(()=>{const sp=document.getElementById('splash');sp.style.opacity='0';setTimeout(()=>sp.style.display='none',800);},2300);const firstHdr=document.querySelector('.mod-header');if(firstHdr){firstHdr.classList.add('open');firstHdr.nextElementSibling.classList.add('open');}document.getElementById('main').addEventListener('click',()=>{if(window.innerWidth<=700)document.getElementById('sidebar').classList.remove('mobile-open');});});
 </script></body></html>
