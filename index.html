@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>English Master v4 🇺🇸 Benício — 120 Aulas</title><style>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>English Master — Benício 🇺🇸 — 120 Aulas</title><style>
 :root{--bg:#0f0f1a;--bg2:#13132a;--card:#1e2746;--card2:#252d52;--border:#2e3a6e;--text:#e8eaf6;--text2:#9fa8da;--accent:#4fc3f7;--green:#00e676;--orange:#ff9800;--pron:#ffab40;--red:#ef5350;--purple:#ce93d8;--shadow:0 4px 20px rgba(0,0,0,.4);}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-serif;min-height:100vh;overflow-x:hidden;}
@@ -353,8 +353,10 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
 .sidebar-action-btn:hover{border-color:var(--accent);}
 /* ── Mobile sidebar fixes ── */
 @media(max-width:700px){
-  #menu-btn{display:flex;align-items:center;justify-content:center;min-width:40px;min-height:40px;font-size:1.4rem;padding:8px;}
-  #topbar{position:sticky;top:0;z-index:450;touch-action:manipulation;}
+  #sidebar{z-index:1000 !important;}
+  #sidebar-overlay{z-index:999 !important;}
+  #menu-btn{display:flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;font-size:1.5rem;padding:8px;touch-action:manipulation;-webkit-tap-highlight-color:rgba(79,195,247,.3);}
+  #topbar{position:sticky;top:0;z-index:450;}
   .sm2-flashcard{padding:1.5rem 1rem;}
   .sm2-word{font-size:1.8rem;}
   .sm2-rating-row{gap:.5rem;}
@@ -364,7 +366,8 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
 }
 </style></head><body>
 <div id="splash">
-  <h1>&#127482;&#127480; English Master - Benício</h1>
+  <h1>&#127482;&#127480; English Master</h1>
+  <p style='font-size:.95rem;opacity:.8;margin:.2rem 0 0'>Curso exclusivo de Benício</p>
   <p>Carregando 120 aulas completas...</p>
   <div class="splash-bar"><div class="splash-fill"></div></div>
 </div>
@@ -372,7 +375,7 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
 <div id="app">
   <nav id="sidebar">
     <div id="sidebar-header">
-      <h2>&#127482;&#127480; English Master v2</h2>
+      <h2>&#127482;&#127480; English Master</h2><div style='font-size:.75rem;color:var(--accent);font-weight:600;margin-top:2px'>Benício · 120 aulas</div>
       <div class="stats-row">
         <div class="stat-pill">&#9889; <span id="xp-display">0</span> XP</div>
         <div class="stat-pill">&#128293; <span id="streak-display">0</span> dias</div>
@@ -409,7 +412,7 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-se
   <div id="main">
     <div id="topbar">
       <button id="menu-btn" onclick="toggleSidebar()">&#9776;</button>
-      <div id="topbar-title"><h3 id="tb-title">English Master</h3><p id="tb-sub">Selecione uma aula</p></div>
+      <div id="topbar-title"><h3 id="tb-title">English Master — Benício</h3><p id="tb-sub">Selecione uma aula</p></div>
       <div class="timer-box">&#9201; <span id="timer-display">00:00</span><div id="timer-bar"><div id="timer-fill" style="width:0%"></div></div></div>
       <div class="xp-box">&#9889; <span id="xp-top">0</span> XP</div>
       <div class="streak-box">&#128293; <span id="streak-top">0</span></div>
@@ -510,7 +513,21 @@ function startListening(phrase,resultId){const resultEl=document.getElementById(
 // ============================================================
 function buildSidebar(){const nav=document.getElementById('nav');const modules={};Object.entries(LESSONS).forEach(([id,l])=>{const m=l.module;if(!modules[m])modules[m]={name:l.mod_name,icon:l.mod_icon,lessons:[]};modules[m].lessons.push({id:parseInt(id),title:l.title});});Object.entries(modules).sort((a,b)=>parseInt(a[0])-parseInt(b[0])).forEach(([mod,data])=>{const div=document.createElement('div');div.className='mod-group';const hdr=document.createElement('div');hdr.className='mod-header';hdr.innerHTML=`<span>${data.name}</span><span class="chev">▶</span>`;hdr.onclick=()=>{hdr.classList.toggle('open');ls.classList.toggle('open');};const ls=document.createElement('div');ls.className='mod-lessons';data.lessons.forEach(l=>{const item=document.createElement('div');item.className='lesson-item';item.dataset.lid=l.id;item.innerHTML=`<span class="l-icon">○</span>${l.id}. ${l.title}`;item.onclick=()=>loadLesson(l.id);ls.appendChild(item);});div.appendChild(hdr);div.appendChild(ls);nav.appendChild(div);});}
 function showSidebarPanel(which){document.getElementById('nav').style.display=which==='nav'?'block':'none';const nb=document.getElementById('notebook-panel');const st=document.getElementById('stats-panel');nb.classList.toggle('active',which==='notebook');st.classList.toggle('active',which==='stats');document.querySelectorAll('.sidebar-tab').forEach((el,i)=>el.classList.toggle('active',['nav','notebook','stats'][i]===which));if(which==='notebook')renderNotebook();if(which==='stats')renderStats();}
-function toggleSidebar(){const sb=document.getElementById('sidebar');if(window.innerWidth<=700)sb.classList.toggle('mobile-open');else sb.classList.toggle('collapsed');}
+function toggleSidebar(){
+  const sb=document.getElementById('sidebar');
+  const ov=document.getElementById('sidebar-overlay');
+  if(!sb)return;
+  if(window.innerWidth<=700){
+    const isOpen=sb.classList.contains('mobile-open');
+    sb.classList.toggle('mobile-open',!isOpen);
+    if(ov)ov.style.display=isOpen?'none':'block';
+    document.body.style.overflow=isOpen?'':'hidden';
+  } else {
+    sb.classList.toggle('collapsed');
+    if(ov)ov.style.display='none';
+    document.body.style.overflow='';
+  }
+}
 
 // ============================================================
 // NOTEBOOK
@@ -635,29 +652,6 @@ function closeSidebarMobile(){
   if(ov)ov.style.display='none';
   document.body.style.overflow='';
 }
-function _patchToggleSidebar(){
-  // Override toggleSidebar to handle overlay
-  window.toggleSidebar=function(){
-    const sb=document.getElementById('sidebar');
-    const ov=document.getElementById('sidebar-overlay');
-    if(!sb)return;
-    if(window.innerWidth<=700){
-      const isOpen=sb.classList.contains('mobile-open');
-      if(isOpen){
-        sb.classList.remove('mobile-open');
-        if(ov)ov.style.display='none';
-        document.body.style.overflow='';
-      } else {
-        sb.classList.add('mobile-open');
-        if(ov)ov.style.display='block';
-        document.body.style.overflow='hidden';
-      }
-    } else {
-      sb.classList.toggle('collapsed');
-    }
-  };
-}
-// Patch on DOMContentLoaded (called from init block below)
 
 // ═══════════════════════════════════════════════════════════════════
 //  AVATAR
@@ -1265,5 +1259,5 @@ function openTab(name,id){
 
 function loadFlashcardTest(words){const overlay=document.createElement('div');overlay.style.cssText='position:fixed;inset:0;background:var(--bg);z-index:9000;overflow-y:auto;padding:2rem;';overlay.innerHTML=`<div style="max-width:600px;margin:0 auto;"><div style="display:flex;justify-content:space-between;margin-bottom:1rem;"><h2 style="color:var(--accent);">📝 Teste de Vocabulário</h2><button class="btn btn-ghost" onclick="this.closest('[style]').remove()">✕ Fechar</button></div><div id="nb-test-view"></div></div>`;document.body.appendChild(overlay);let idx=0;const shuffle=[...words].sort(()=>Math.random()-.5);function showNb(){if(idx>=shuffle.length){document.getElementById('nb-test-view').innerHTML=`<div style="text-align:center;padding:2rem;"><div style="font-size:3rem;">🎉</div><h3 style="color:var(--green);">Teste concluído!</h3></div>`;return;}const w=shuffle[idx];document.getElementById('nb-test-view').innerHTML=`<div class="fc-container"><div class="fc-card" id="nb-fc" onclick="this.classList.add('flipped')"><div class="fc-front"><div class="fc-word">${w.word}</div><button class="btn-sm" onclick="event.stopPropagation();speak('${w.word.replace(/'/g,"\\'")}')">🔊</button><div class="fc-hint">Clique para ver</div></div><div class="fc-back"><div class="fc-pron">🇧🇷 ${w.pron}</div><div class="fc-pt">${w.pt}</div></div></div></div><div style="display:flex;gap:.8rem;justify-content:center;margin-top:1rem;"><button class="fc-btn fc-again" onclick="idx++;showNb()">Próxima</button></div>`;};showNb();}
 
-window.addEventListener('DOMContentLoaded',()=>{loadState();buildSidebar();updateUI();setTimeout(()=>{dashRefreshBadge();_patchToggleSidebar();},600);const m=Math.floor(state.timerSec/60).toString().padStart(2,'0'),s=(state.timerSec%60).toString().padStart(2,'0');document.getElementById('timer-display').textContent=m+':'+s;setTimeout(()=>{const sp=document.getElementById('splash');sp.style.opacity='0';setTimeout(()=>sp.style.display='none',800);},2300);const firstHdr=document.querySelector('.mod-header');if(firstHdr){firstHdr.classList.add('open');firstHdr.nextElementSibling.classList.add('open');}document.getElementById('main').addEventListener('click',()=>{if(window.innerWidth<=700)document.getElementById('sidebar').classList.remove('mobile-open');});});
+window.addEventListener('DOMContentLoaded',()=>{loadState();buildSidebar();updateUI();setTimeout(dashRefreshBadge,600);const m=Math.floor(state.timerSec/60).toString().padStart(2,'0'),s=(state.timerSec%60).toString().padStart(2,'0');document.getElementById('timer-display').textContent=m+':'+s;setTimeout(()=>{const sp=document.getElementById('splash');sp.style.opacity='0';setTimeout(()=>sp.style.display='none',800);},2300);const firstHdr=document.querySelector('.mod-header');if(firstHdr){firstHdr.classList.add('open');firstHdr.nextElementSibling.classList.add('open');}document.getElementById('main').addEventListener('click',()=>{if(window.innerWidth<=700)document.getElementById('sidebar').classList.remove('mobile-open');});});
 </script></body></html>
