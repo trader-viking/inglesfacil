@@ -507,79 +507,70 @@ function speakAll(texts,idx){
 // ============================================================
 let speechRec=null,speechRecActive=false,speechRecFinal='',speechRecTimer=null,speechRecResultId=null,speechRecHandled=false;
 function _srMicBtn(resultId){const parts=resultId.split('-');return document.getElementById('mic-'+parts[1]+'-'+parts[2]);}
-function _srReset(micBtn){speechRecActive=false;speechRecHandled=false;speechRecResultId=null;clearTimeout(speechRecTimer);if(micBtn){micBtn.textContent='🎤 Praticar';micBtn.style.background='';micBtn.disabled=false;}}
+function _srReset(micBtn){speechRecActive=false;speechRecHandled=false;speechRecResultId=null;clearTimeout(speechRecTimer);if(micBtn){micBtn.textContent='🎤 Praticar';micBtn.style.background='';}}
 function startListening(phrase,resultId){
   const resultEl=document.getElementById(resultId);
   if(!resultEl)return;
   const micBtn=_srMicBtn(resultId);
-  // Toggle stop se já estiver gravando esta frase
+  // Toggle: clicar de novo para parar
   if(speechRecActive&&speechRecResultId===resultId){
-    speechRecActive=false;
-    clearTimeout(speechRecTimer);
+    speechRecActive=false;clearTimeout(speechRecTimer);
     if(speechRec)try{speechRec.stop();}catch(e){}
     return;
   }
-  // Parar gravação anterior se houver
-  if(speechRecActive&&speechRec){speechRecActive=false;try{speechRec.stop();}catch(e){}}
+  // Parar qualquer gravação anterior
+  if(speechRec)try{speechRec.stop();}catch(e){}
   if(!window.SpeechRecognition&&!window.webkitSpeechRecognition){
-    resultEl.innerHTML='🎙️ Não suportado. Use Chrome ou Edge.';return;
+    resultEl.innerHTML='🎙️ Não suportado. Use Chrome ou Edge com internet.';return;
   }
-  function makeRec(){
-    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-    const r=new SR();
-    r.lang='en-US';r.continuous=true;r.interimResults=true;
-    r.onresult=(e)=>{
-      clearTimeout(speechRecTimer);
-      let interim='';
-      for(let i=e.resultIndex;i<e.results.length;i++){
-        if(e.results[i].isFinal)speechRecFinal+=e.results[i][0].transcript+' ';
-        else interim+=e.results[i][0].transcript;
-      }
-      const txt=(speechRecFinal+interim).trim();
-      resultEl.innerHTML='<span style="color:var(--accent)">🎙️ </span><em>"'+txt+'"</em>';
-      // Auto-stop após 2.5s de silêncio
-      speechRecTimer=setTimeout(()=>{speechRecActive=false;try{r.stop();}catch(e){}},2500);
-    };
-    r.onerror=(ev)=>{
-      if(ev.error==='no-speech'){
-        // no-speech: iOS dispara isso continuamente — ignorar e aguardar
-        return;
-      }
-      speechRecHandled=true;
-      _srReset(micBtn);
-      if(ev.error==='not-allowed')resultEl.innerHTML='🚫 Permissão negada. Permita o microfone nas configurações.';
-      else resultEl.innerHTML='❌ Erro de microfone: '+ev.error;
-    };
-    r.onend=()=>{
-      if(speechRecHandled)return;
-      if(speechRecActive&&speechRecResultId===resultId){
-        // iOS: continuous ignorado — reiniciar para continuar ouvindo
-        try{const nr=makeRec();speechRec=nr;nr.start();return;}catch(e){}
-      }
-      // Parou (por stop() ou timeout) — calcular score
-      _srReset(micBtn);
-      const said=speechRecFinal.trim();
-      if(!said){resultEl.innerHTML='❌ Nada captado. Fale mais alto e tente de novo.';return;}
-      const saidLow=said.toLowerCase();
-      const target=phrase.toLowerCase().replace(/[^a-z0-9 ]/g,'');
-      const words=target.split(' ').filter(w=>w.length>2);
-      const matches=words.length?words.filter(w=>saidLow.includes(w)).length:0;
-      const pct=words.length?Math.round(matches/words.length*100):0;
-      const color=pct>=80?'var(--green)':'#ff9800';
-      const icon=pct>=80?'✅':'⚠️';
-      resultEl.innerHTML=icon+' <strong style="color:'+color+'">'+pct+'%</strong> &nbsp;|&nbsp; você disse: <em>"'+said+'"</em>';
-      if(!state.missions.speaking){state.missions.speaking=true;addXP(25,'Exercício de fala!');}
-      saveState();
-    };
-    return r;
-  }
-  // Inicializar
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  speechRec=new SR();
+  speechRec.lang='en-US';
+  speechRec.continuous=true;
+  speechRec.interimResults=true;
   speechRecFinal='';speechRecActive=true;speechRecResultId=resultId;speechRecHandled=false;
   if(micBtn){micBtn.textContent='🛑 Parar';micBtn.style.background='#c0392b';}
   resultEl.innerHTML='<span style="color:var(--accent);font-weight:600">🎙️ Ouvindo… fale agora!</span>';
-  // Timeout máximo de 10s
-  speechRecTimer=setTimeout(()=>{speechRecActive=false;if(speechRec)try{speechRec.stop();}catch(e){}},10000);
-  try{speechRec=makeRec();speechRec.start();}
+  speechRec.onresult=(e)=>{
+    clearTimeout(speechRecTimer);
+    let interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      if(e.results[i].isFinal)speechRecFinal+=e.results[i][0].transcript+' ';
+      else interim+=e.results[i][0].transcript;
+    }
+    resultEl.innerHTML='🎙️ <em>"'+(speechRecFinal+interim).trim()+'"</em>';
+    // 3s de silêncio após fala → parar automaticamente
+    speechRecTimer=setTimeout(()=>{speechRecActive=false;if(speechRec)try{speechRec.stop();}catch(e){}},3000);
+  };
+  speechRec.onerror=(ev)=>{
+    // no-speech e aborted: ignorar (continuous continua ouvindo no Chrome)
+    if(ev.error==='no-speech'||ev.error==='aborted')return;
+    speechRecHandled=true;
+    _srReset(micBtn);
+    if(ev.error==='not-allowed')resultEl.innerHTML='🚫 Microfone bloqueado. Clique no 🔒 na barra de endereço e permita o microfone.';
+    else if(ev.error==='network')resultEl.innerHTML='🌐 Sem internet. O reconhecimento de voz precisa de conexão à internet.';
+    else resultEl.innerHTML='❌ Erro: '+ev.error;
+  };
+  speechRec.onend=()=>{
+    clearTimeout(speechRecTimer);
+    if(speechRecHandled){speechRecHandled=false;return;}
+    _srReset(micBtn);
+    const said=speechRecFinal.trim();
+    if(!said){resultEl.innerHTML='❌ Nada captado — verifique: ① microfone permitido ② internet conectada ③ fale em inglês mais alto';return;}
+    const saidLow=said.toLowerCase();
+    const target=phrase.toLowerCase().replace(/[^a-z0-9 ]/g,'');
+    const words=target.split(' ').filter(w=>w.length>2);
+    const matches=words.length?words.filter(w=>saidLow.includes(w)).length:0;
+    const pct=words.length?Math.round(matches/words.length*100):0;
+    const color=pct>=80?'var(--green)':'#ff9800';
+    const icon=pct>=80?'✅':'⚠️';
+    resultEl.innerHTML=icon+' <strong style="color:'+color+'">'+pct+'%</strong> &nbsp;|&nbsp; você disse: <em>"'+said+'"</em>';
+    if(!state.missions.speaking){state.missions.speaking=true;addXP(25,'Exercício de fala!');}
+    saveState();
+  };
+  // Timeout máximo de 12s
+  speechRecTimer=setTimeout(()=>{speechRecActive=false;if(speechRec)try{speechRec.stop();}catch(e){}},12000);
+  try{speechRec.start();}
   catch(err){_srReset(micBtn);resultEl.innerHTML='❌ Erro ao iniciar: '+err.message;}
 }
 
