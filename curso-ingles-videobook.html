@@ -505,62 +505,8 @@ function speakAll(texts,idx){
 // ============================================================
 // SPEECH RECOGNITION
 // ============================================================
-let speechRec=null,speechRecSid=0;
-function _srMicBtn(resultId){const p=resultId.split('-');return document.getElementById('mic-'+p[1]+'-'+p[2]);}
-function startListening(phrase,resultId){
-  const resultEl=document.getElementById(resultId);
-  if(!resultEl)return;
-  const micBtn=_srMicBtn(resultId);
-  if(!window.SpeechRecognition&&!window.webkitSpeechRecognition){
-    resultEl.innerHTML='🎙️ Não suportado. Use Chrome ou Edge com internet.';return;
-  }
-  // Parar sessão anterior sem afetar a nova
-  const sid=++speechRecSid;
-  if(speechRec){try{speechRec.abort();}catch(e){}speechRec=null;}
-  if(micBtn){micBtn.textContent='⏺ Gravando...';micBtn.disabled=true;micBtn.style.background='#c0392b';}
-  resultEl.innerHTML='<span style="color:var(--accent);font-weight:600">🎙️ Ouvindo… fale a frase agora</span>';
-  // Aguarda eventos do abort anterior terminarem antes de iniciar nova sessão
-  setTimeout(()=>{
-    if(sid!==speechRecSid)return;
-    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-    const r=new SR();
-    speechRec=r;
-    r.lang='en-US';
-    r.continuous=false;
-    r.interimResults=false;
-    r.maxAlternatives=1;
-    r.onresult=(e)=>{
-      if(sid!==speechRecSid)return;
-      const said=e.results[0][0].transcript;
-      const saidLow=said.toLowerCase();
-      const target=phrase.toLowerCase().replace(/[^a-z0-9 ]/g,'');
-      const words=target.split(' ').filter(w=>w.length>2);
-      const matches=words.length?words.filter(w=>saidLow.includes(w)).length:0;
-      const pct=words.length?Math.round(matches/words.length*100):0;
-      const color=pct>=80?'var(--green)':'#ff9800';
-      const icon=pct>=80?'✅':'⚠️';
-      resultEl.innerHTML=icon+' <strong style="color:'+color+'">'+pct+'%</strong> — você disse: <em>"'+said+'"</em>';
-      if(!state.missions.speaking){state.missions.speaking=true;addXP(25,'Exercício de fala!');}
-      saveState();
-    };
-    r.onerror=(ev)=>{
-      if(sid!==speechRecSid)return;
-      if(ev.error==='no-speech')resultEl.innerHTML='⏰ Sem fala — clique em 🎤 e tente novamente.';
-      else if(ev.error==='not-allowed')resultEl.innerHTML='🚫 Microfone bloqueado — clique no 🔒 e permita.';
-      else if(ev.error==='network')resultEl.innerHTML='🌐 Precisa de internet para funcionar.';
-      else resultEl.innerHTML='❌ Erro: '+ev.error;
-    };
-    r.onend=()=>{
-      if(sid!==speechRecSid)return;
-      if(micBtn){micBtn.textContent='🎤 Praticar';micBtn.disabled=false;micBtn.style.background='';}
-    };
-    try{r.start();}
-    catch(err){
-      if(micBtn){micBtn.textContent='🎤 Praticar';micBtn.disabled=false;micBtn.style.background='';}
-      resultEl.innerHTML='❌ Erro ao iniciar: '+err.message;
-    }
-  },100);
-}
+let speechRec=null;
+function startListening(phrase,resultId){const resultEl=document.getElementById(resultId);if(!resultEl)return;if(!window.SpeechRecognition&&!window.webkitSpeechRecognition){resultEl.textContent='🎙️ Não suportado.';resultEl.className='sp-result ok';return;}const SR=window.SpeechRecognition||window.webkitSpeechRecognition;speechRec=new SR();speechRec.lang='en-US';speechRec.continuous=false;speechRec.interimResults=false;resultEl.textContent='🎙️ Ouvindo...';resultEl.className='sp-result ok';speechRec.onresult=(e)=>{const said=e.results[0][0].transcript.toLowerCase();const target=phrase.toLowerCase().replace(/[^a-z0-9 ]/g,'');const words=target.split(' ');const matches=words.filter(w=>w.length>2&&said.includes(w)).length;const pct=Math.round(matches/words.length*100);if(pct>=80){resultEl.textContent='✅ '+pct+'% — "'+said+'"';resultEl.className='sp-result good';}else{resultEl.textContent='⚠️ '+pct+'% — "'+said+'"';resultEl.className='sp-result ok';}if(!state.missions.speaking){state.missions.speaking=true;addXP(25,'Exercício de fala!');}saveState();};speechRec.onerror=()=>{resultEl.textContent='❌ Erro de microfone';resultEl.className='sp-result ok';};speechRec.start();}
 
 // ============================================================
 // SIDEBAR
